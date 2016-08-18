@@ -1,0 +1,408 @@
+/*
+ * Copyright (c) Jim Coles (jameskcoles@gmail.com) 2016. through present.
+ *
+ * Licensed under the following license agreement:
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Also see the LICENSE file in the repository root directory.
+ */
+
+package org.jkcsoft.bogey.system;
+
+import org.jkcsoft.bogey.metamodel.Guid;
+import org.jkcsoft.bogey.metamodel.Oid;
+import org.jkcsoft.bogey.model.BusinessObject;
+
+import java.util.Hashtable;
+
+public class SOMImpl implements SOM {
+    //---------------------------- Private static variables -----------------------------
+
+    static public final String MSG_INVALID_CONNECT = "Invalid SOMImpl Connection.  ";
+
+    static private SOMImpl som;                                        // singleton SOMImpl object
+
+    //---------------------------- Instance variables  -----------------------------
+
+    private ObjectContext _context = null;          // system object context
+    private Hashtable _connectionList = null;                    // list of valid CRMConnections
+    private Hashtable _acmList = null;                 // table of IAccessMgr's (per ICRMConnection)
+
+    //---------------------------- Private Constructors -----------------------------
+
+    /**
+     * Default constructor initializes the connection list and creates a system context.
+     */
+    private SOMImpl() throws AppException {
+        _connectionList = new Hashtable();
+        _context = new ObjectContext();
+        _context.setConnection(connect());        // system connection
+        _acmList = new Hashtable();
+    }
+
+    /**
+     * Returns the singleton SOMImpl object
+     */
+    public static SOM getInstance() throws AppException {
+        if (som == null)
+            som = new SOMImpl();
+        return som;
+    }
+
+    //---------------------------- SOM Methods -----------------------------
+
+    /**
+     * Returns an object of the specified class synonym.
+     */
+    public BusinessObject getCompObject(ObjectContext context, String name)
+            throws AppException
+    {
+        if (isValid(context.getConnection())) {
+            // TODO
+//            String classname = (String) SimpleDirectory.getInstance().getValue("classname", name);
+//            return PoolMgr.getInstance().getObject(context, classname);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the object of the specified class synonym and object IID
+     */
+    public BusinessObject getCompObject(ObjectContext context, String name, Oid objID)
+            throws AppException
+    {
+        // TODO
+//        IDataSet args = new DataSet();
+//        args.setIID(objID);
+//        return getCompObject(context, name, args, false);
+        return null;
+    }
+
+
+    /**
+     * Returns the object of the specified class synonym and object IID.  If editable is
+     * true, then the object returned is editable.
+     */
+    public BusinessObject getCompObject(ObjectContext context, String name, Oid objID, boolean editable)
+            throws AppException
+    {
+//        IDataSet args = null;
+        if (objID != null) {
+//            args = new DataSet();
+//            args.setIID(objID);
+        }
+        if (isValid(context.getConnection())) {
+//            String classname = (String) SimpleDirectory.getInstance().getValue("classname", name);
+            return null; //PoolMgr.getInstance().getObject(context, classname, args, editable);
+        }
+        return null;
+    }
+
+    /**
+     * Returns an object of the specified class GUID.
+     */
+    public BusinessObject getCompObject(ObjectContext context, Guid guid)
+            throws AppException {
+        return null;
+    }
+
+    /**
+     * Returns the object of the specified class GUID and object IID.
+     */
+    public BusinessObject getCompObject(ObjectContext context, Guid guid, Oid objID)
+            throws AppException {
+        return null;
+    }
+
+    /**
+     * Returns the object of the specified class GUID and object IID. If editable is
+     * true, then the object returned is editable.
+     */
+    public BusinessObject getCompObject(ObjectContext context, Guid guid, Oid objID, boolean editable)
+            throws AppException {
+        return null;
+    }
+
+    /**
+     * Returns true if the given ICRMConnection is valid
+     */
+    public boolean isValid(ICRMConnection conn)
+            throws AppException
+    {
+        if (conn == null) throw new AppException(MSG_INVALID_CONNECT + "Attempt to use null connection to SOMImpl.");
+        if (conn.getOid() == null)
+            throw new AppException(MSG_INVALID_CONNECT + "Attempt to use uninitialized connection to SOMImpl.");
+        if (!_connectionList.containsKey(conn.getOid()))
+            throw new AppException(MSG_INVALID_CONNECT + "Attempt to use unrecognized connection to SOMImpl.  ID=" +
+                                            conn.getOid());
+        ICRMConnection realConn = (ICRMConnection) _connectionList.get(conn.getOid());
+        if (!realConn.equals(conn) && (conn.getOid().getLongValue() != 0))
+            throw new AppException(MSG_INVALID_CONNECT + "Attempt to spoof connection to SOMImpl. User ID=" + conn
+                    .getOid() + ": " + conn + ",  Actual ID=" + realConn.getOid() + ": " + realConn);
+        return true;
+    }
+
+    /**
+     * Returns a valid ICRMConnection if the username and password is valid.
+     */
+    public ICRMConnection connect(String username, String password)
+            throws AppException {
+        if (username.equals("system") && password.equals("system"))
+            return connect();
+        Oid userIID = null;
+        if (validLoginID(username))
+            userIID = checkPassword(username, password);
+        if (userIID != null) {
+            ICRMConnection newConn = new CRMConnection(userIID, this); // create a new CRMConnection with it
+
+            Oid conniid = newConn.getOid();
+            if (!_connectionList.containsKey(conniid))        // if we need to, lets add it to our list of valid
+                // connections
+                _connectionList.put(conniid, newConn);
+            else
+                throw new AppException("Already logged in. UserID=" + userIID.getLongValue());
+            return newConn;
+        }//end if
+        else
+            throw new AppException("LoginID and Password could not be authenticated.");
+    }
+
+    /**
+     * Returns a valid anonymouse ICRMConnection.
+     */
+    synchronized public ICRMConnection anonymousConnect()
+            throws Exception {
+        Oid userIID = null;
+        ObjectContext context = _context;
+
+//        ITransaction trans = TransactionMgr.getInstance().getTransaction(context);
+//        com.oculussoftware.api.busi.common.org.IUser anonUser = (com.oculussoftware.api.busi.common.org.IUser)
+//                context.getCRM().getCompObject(context, "User", (IDataSet) null, true);
+//        userIID = anonUser.getOid();
+//        trans.rollback();
+
+        ICRMConnection newConn = new CRMConnection(userIID, this); // create a new CRMConnection with it
+        Oid conniid = newConn.getOid();
+        _connectionList.put(conniid, newConn);
+        return newConn;
+    }
+
+
+    public boolean isLoggedIn(ObjectContext context) throws AppException {
+        return isLoggedIn(context.getConnection());
+    }
+
+    public boolean isLoggedIn(ICRMConnection conn) throws AppException {
+        boolean blnRV;
+        //issue 2191 uncommented
+        //this is commented out so that the invalid connection stacktrace
+        //will get to the UI so we can try to debug it
+        try {
+            blnRV = isValid(conn);
+        } catch (AppException ex) {
+            blnRV = false;
+        }
+        return blnRV;
+    }
+
+
+    /**
+     * connect with a System context
+     */
+    private ICRMConnection connect() throws AppException {
+        Oid userIID = new Oid(0);
+        ICRMConnection newConn = new CRMConnection(userIID, this);// create a new CRMConnection with it
+        if (!_connectionList.containsKey(newConn.getIID()))       // if we need to, lets add it to our list of valid
+            // connections
+            _connectionList.put(newConn.getOid(), newConn);
+        return newConn;
+    }
+
+    /**
+     *
+     */
+    private boolean validLoginID(String strLogin) throws AppException {
+        IQueryProcessor stmt = null;
+        boolean blnRV = false;
+        try {
+            IRConnection repConn = getDatabaseConnection(_context);  // get a db connection
+            stmt = repConn.createProcessor();
+            IDataSet results = stmt.retrieve(      // check if the username and password match
+                                                   " SELECT OBJECTID " +
+                                                           " FROM APPUSER " +
+                                                           " WHERE LOGINID='" + SQLUtil.primer(strLogin) + "'" +
+                                                           " AND ACTIVE = 1" +
+                                                           " AND DELETESTATE = " + DeleteState.NOT_DELETED
+                                                           .getIntValue());
+            blnRV = results.next();
+            returnDatabaseConnection(repConn);
+        }//end try
+        catch (AppException exc) {
+            com.oculussoftware.service.log.LogService.getInstance().write(exc);
+            throw new AppException("Error connecting to database.");
+        }//end catch
+        finally {
+            if (stmt != null) stmt.close();
+        }
+        if (!blnRV)
+            throw new AppException("Invalid LoginID.");
+        return blnRV;
+    }
+
+    /**
+     * assumes that a valid login id is already verified
+     */
+    private Oid checkPassword(String strLogin, String strPassword) throws AppException {
+        IQueryProcessor stmt = null, stmt2 = null;
+        Oid userIID = null;
+        try {
+            IRConnection repConn = getDatabaseConnection(_context);   // get a db connection
+            stmt = repConn.createProcessor();
+            IDataSet results = stmt.retrieve(        // check if the username and password match
+                                                     " SELECT OBJECTID " +
+                                                             " FROM APPUSER " +
+                                                             " WHERE LOGINID='" + SQLUtil.primer(strLogin) + "' AND " +
+                                                             "PASSWORD='" + SQLUtil.primer(strPassword) + "'" +
+                                                             " AND ACTIVE = 1" +
+                                                             " AND FAILEDLOGINS < 5" +
+                                                             " AND DELETESTATE = " + DeleteState.NOT_DELETED
+                                                             .getIntValue());
+            if (results.next()) {
+                long lngObjID = results.getLong("OBJECTID");
+                userIID = _context.getRepository().makeReposID(lngObjID);    // if so, get the user's ID
+                stmt2 = repConn.createProcessor();
+                stmt2.update("UPDATE APPUSER SET FAILEDLOGINS = 0" +
+                                     " WHERE OBJECTID=" + lngObjID);
+            }//end if
+            else  //increment the failed logins
+            {
+                stmt2 = repConn.createProcessor();
+                stmt2.update("UPDATE APPUSER SET FAILEDLOGINS = FAILEDLOGINS + 1" +
+                                     " WHERE LOGINID='" + strLogin + "'");
+            }
+            repConn.commit();
+            returnDatabaseConnection(repConn);
+        }//end try
+        finally {
+            if (stmt != null) stmt.close();
+            if (stmt2 != null) stmt2.close();
+        }
+        if (userIID == null)
+            throw new AppException("Invalid Password.");
+        return userIID;
+    }
+
+    /** public void startTransaction() {} ??? */
+
+    /**
+     * Gets the ACM instance for the given connection.
+     */
+    public IAccessMgr getAccessMgr(ObjectContext ctxt)
+            throws AppException {
+        IAccessMgr retObj = null;
+        // 1. ensure context has a valid connection
+        // 2. ensure 1 acm per connection
+        if (!isValid(ctxt.getConnection()))
+            throw new AppException(MSG_INVALID_CONNECT);
+
+        // take the ACM init hit now instead of later...
+        Oid id = ctxt.getConnection().getOid();
+        retObj = (IAccessMgr) _acmList.get(id);
+        if (retObj == null)        //
+        {
+            retObj = new AccessMgr(ctxt, PermissionSet.getInstance());
+            _acmList.put(id, retObj);
+        }
+
+        return retObj;
+    }
+
+    /**
+     * Removes the AccessManager from the hashmap.
+     */
+    public void removeAccessMgr(ObjectContext context)
+            throws AppException {
+        removeAccessMgr(context.getConnection().getIID());
+    }
+
+    /**
+     * Removes the AccessManager from the hashmap.
+     */
+    public void removeAccessMgr(Oid iid)
+            throws AppException {
+        if (_acmList != null && !_acmList.isEmpty())
+            _acmList.remove(iid);
+    }
+
+    /**
+     * gets the LicenseManager
+     */
+    public com.oculussoftware.api.sysi.license.ILicenseMgr getLicenseMgr()
+            throws AppException {
+        return com.oculussoftware.system.license.LicenseMgr.getInstance();
+    }//
+
+    /**
+     * Commits the transaction for the given context.
+     */
+    public boolean commitTransaction(ObjectContext context)
+            throws AppException {
+        // if it's a valid connection, run the commit.
+        if (isValid(context.getConnection()))
+            return TransactionMgr.getInstance().getTransaction(context).commit();
+        else
+            throw new AppException(MSG_INVALID_CONNECT);
+    }
+
+    /**
+     * Rolls back the transaction for the given context.
+     */
+    public void rollbackTransaction(ObjectContext context)
+            throws AppException {
+        if (isValid(context.getConnection()))
+            TransactionMgr.getInstance().getTransaction(context).rollback();
+        else
+            throw new AppException(MSG_INVALID_CONNECT);
+    }
+
+    /**
+     * Returns a connection to the repository
+     */
+    public IRConnection getDatabaseConnection(ObjectContext context)
+            throws AppException {
+        if (isValid(context.getConnection()))
+            return (IRConnection) getCompObject(context, "Connection");
+        else
+            throw new AppException(MSG_INVALID_CONNECT);
+    }
+
+    /**
+     * Makes the given IRConnection available to others
+     */
+    public void returnDatabaseConnection(IRConnection conn)
+            throws AppException {
+        if (conn != null) {
+            conn.rollback();
+            PoolMgr.getInstance().returnObject(conn);
+        }
+    }
+
+    /**
+     * Remove the SOMImpl connection from the hashmap.
+     */
+    public void removeCRMConnection(Oid conn_userIID)
+            throws AppException {
+        if (_connectionList != null && conn_userIID != null)
+            _connectionList.remove(conn_userIID);
+    }
+
+    /**
+     * Returns a globally-unique ID.
+     */
+    public Guid genGUID() throws AppException {
+        return new GUID();
+    }
+
+    ;
+}

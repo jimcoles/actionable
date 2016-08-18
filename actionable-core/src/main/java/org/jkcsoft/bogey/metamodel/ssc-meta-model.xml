@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!DOCTYPE ssc-meta-model SYSTEM "../../metametamodel/ssc-meta-model.dtd">
+
+<!-- Created by jcoles on April 30, 2002, 3:47 PM -->
+
+<ssc-meta-model>
+    <ssc-meta-class>
+        <ssc-meta-attribute name="name" type=""/>
+    </ssc-meta-class>
+</ssc-meta-model>
+

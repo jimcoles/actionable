@@ -1,0 +1,540 @@
+/*
+ * Copyright (c) Jim Coles (jameskcoles@gmail.com) 2016. through present.
+ *
+ * Licensed under the following license agreement:
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Also see the LICENSE file in the repository root directory.
+ */
+
+package org.jkcsoft.bogey.rdb;
+
+
+import org.jkcsoft.bogey.system.AppException;
+import org.jkcsoft.bogey.metamodel.*;
+import org.jkcsoft.bogey.metamodel.Class;
+import org.jkcsoft.java.util.Strings;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+/**
+ *
+ */
+public class OracleRdbQuerier extends RdbQuerier {
+    //-------------------------------------------------------------
+    // Private instance vars
+    //-------------------------------------------------------------
+    //-------------------------------------------------------------
+    // Constructor(s)
+    //-------------------------------------------------------------
+    public OracleRdbQuerier() {
+    }
+
+    //-------------------------------------------------------------
+    // Public instance methods
+    //-------------------------------------------------------------
+
+    /**
+     * Creates a union of all queries.  Consuming object must ensure
+     * that queries are compatible for UNION.
+     *
+     * @ param sortdirs Must contain one entry for each item in the
+     * select since all sorting is done by number.
+     */
+
+    private void buildListsFromSelect(List attrs, List alist, List extAttrs) {
+        Iterator iattrs = attrs.iterator();
+        while (iattrs.hasNext()) {
+            QuerySelectItem selitem = (QuerySelectItem) iattrs.next();
+            if (selitem.getAttr() instanceof QueryAttrRef) {
+                QueryAttrRef attrref = (QueryAttrRef) selitem.getAttr();
+                addChainToList(attrref.getAssocs(), alist);
+                if (attrref.getAttr().getIsExtended() && !extAttrs.contains(attrref)) {
+                    extAttrs.add(attrref);
+                }
+            }
+        }
+    }
+
+    private void buildListsFromSort(List sorts, List alist, List extAttrs) {
+        Iterator isorts = sorts.iterator();
+        while (isorts.hasNext()) {
+            QuerySortItem sortitem = (QuerySortItem) isorts.next();
+            addChainToList(sortitem.getAttrRef().getAssocs(), alist);
+            if (sortitem.getAttrRef().getAttr().getIsExtended() && !extAttrs.contains(sortitem.getAttrRef())) {
+                extAttrs.add(sortitem.getAttrRef());
+            }
+        }
+    }
+
+    private void buildListsFromFilter(Object arg, List alist, List extAttrs) {
+        if (arg instanceof QueryFilterExpr) {
+            QueryFilterExpr fex = (QueryFilterExpr) arg;
+            buildListsFromFilter(fex.getLeft(), alist, extAttrs);
+            buildListsFromFilter(fex.getRight(), alist, extAttrs);
+        } else if (arg instanceof QueryAttrRef) {
+            QueryAttrRef attrref = (QueryAttrRef) arg;
+            addChainToList(attrref.getAssocs(), alist);
+            if (attrref.getAttr().getIsExtended() && !extAttrs.contains(attrref)) {
+                extAttrs.add(attrref);
+            }
+        }
+    }
+
+
+    private void addChainToList(AssocChain chain, List alist) {
+        Iterator ichain = chain.iterator();
+        while (ichain.hasNext()) {
+            Association ass = (Association) ichain.next();
+            if (!alist.contains(ass)) {
+                alist.add(ass);
+            }
+        }
+    }
+
+    private void doSelect(StringBuffer sbSql, Query query, List extAttrs)
+            throws AppException {
+        Vector sqlitems = new Vector();
+        QuerySelect select = query.getSelect();
+        if (select != null) {
+            sbSql.append("SELECT ");
+            List items = select.getAttrs();
+            if (items != null) {
+                Iterator iter = items.iterator();
+                while (iter.hasNext()) {
+                    QuerySelectItem selitem = (QuerySelectItem) iter.next();
+                    String strItem = "";
+                    if (selitem.getAttr() == null)
+                        throw new AppException("null valued select item");
+
+                    if (selitem.getAttr() instanceof QueryAttrRef) {
+                        QueryAttrRef ar = (QueryAttrRef) selitem.getAttr();
+                        if (ar.getAttr().getIsExtended()) {
+                            strItem = getXColRef(query.getTargetClass(), ar, extAttrs);
+                        } else {
+                            strItem = getColRef(query.getTargetClass(), ar);
+                        }
+                    } else
+//          if (selitem.getAttr() instanceof String)
+                    {
+                        strItem = selitem.getAttr().toString();
+                    }
+                    // add the alias
+                    if (selitem.getAlias() != null) {
+                        strItem += " AS " + selitem.getAlias() + " ";
+                    }
+                    sqlitems.add(strItem);
+                }
+                sbSql.append(Strings.buildCommaDelList(sqlitems));
+            } else {
+                sbSql.append(" * ");
+            }
+        }
+    }
+
+    private static final char C_SPC = ' ';
+
+    /**
+     * Builds the from clause.
+     */
+    private void doJoins(StringBuffer sbSql, QueryFilter joinFilter, Query query, List assocs, List extAttrs)
+            throws AppException {
+        sbSql.append(" FROM ");
+        Class target = query.getTargetClass();
+
+        // central table of the join
+        sbSql.append(target.get);
+        sbSql.append(C_SPC);
+        sbSql.append(_getTableSyn(target, null));
+        sbSql.append(C_SPC);
+
+        AssocChain chain = new AssocChain();
+        List visits = new Vector();
+        // join in all tables corresponding to referenced classes
+        doJoinsRec(sbSql, joinFilter, target, chain, target, assocs, visits);
+
+        // join in extended attr tables as needed
+        Iterator iAttrs = extAttrs.iterator();
+        int idx = 0;
+        while (iAttrs.hasNext()) {
+            idx++;
+            QueryAttrRef attrref = (QueryAttrRef) iAttrs.next();
+            addExtAttrJoin(sbSql, joinFilter, target, attrref, extAttrs);
+        }
+    }
+
+    /**
+     * Does depth-first build of SQL joins.
+     */
+    private void doJoinsRec(StringBuffer sbSql, QueryFilter joinFilter, Class start, AssocChain chain, Class left, List assocs, List visits)
+            throws AppException {
+        List classAssocs = null;
+        try {
+            classAssocs = getXMR().getClassAssocs(left);
+        } catch (Exception ex) {
+            throw new AppException(ex);
+        }
+
+        Iterator icas = classAssocs.iterator();
+        while (icas.hasNext()) {
+            Association xas = (Association) icas.next();
+            if (_isNewAndNeeded(xas, assocs, visits)) {
+                visits.add(xas);
+                Class right = getOtherClass(xas, left);
+                buildJoin(sbSql, joinFilter, start, chain, xas, left, right);
+                chain.add(xas);
+                doJoinsRec(sbSql, joinFilter, start, chain, right, assocs, visits);
+                chain.removeLast();
+            }
+        }
+    }
+
+    private Class getOtherClass(Association ass, Class end)
+            throws AppException {
+        Class retObj = null;
+        try {
+            retObj = getXMR().getOtherEnd(ass, end);
+        } catch (Exception ex) {
+            throw new AppException(ex);
+        }
+        return retObj;
+    }
+
+    /**
+     * Builds the SQL join need to traverse the specified association (xas).
+     *
+     * @param start     The class with respect to which the end-chain class is being joined.
+     * @param leftchain The chain of associations leading up to the left class.  Does not include xas.
+     * @param xas       The new Association being joined in.
+     * @param left      The left class side of the association.  This has already been added
+     *                  to the join.
+     * @param right     The right side of the association.  This is the class we are join into the
+     *                  overall join clause.
+     */
+    private void buildJoin(StringBuffer sbSql, QueryFilter joinFilter, Class start, AssocChain leftchain, Association xas, Class left, Class right)
+            throws AppException {
+        String childSyn = null;
+        String parentSyn = null;
+        String leftCol = null;
+        String rightCol = null;
+        AssocChain rightchain = new AssocChain(leftchain);
+        rightchain.add(xas);
+        String rightSyn = getTableSyn(start, rightchain);
+        if (xas.isM2M()) {
+            // leftTable LEFT OUTER JOIN assocTable LEFT OUTER JOIN rightTable
+            if (left == xas.getFromClass()) {
+                childSyn = getTableSyn(start, leftchain);
+                parentSyn = getTableSyn(start, rightchain);
+                leftCol = xas.getFromColName();
+                rightCol = xas.getToColName();
+            } else {
+                childSyn = getTableSyn(start, rightchain);
+                parentSyn = getTableSyn(start, leftchain);
+                leftCol = xas.getToColName();
+                rightCol = xas.getFromColName();
+            }
+            sbSql.append(", ");
+            sbSql.append(xas.getAssocClass().getTableName());
+            sbSql.append(C_SPC);
+            sbSql.append(xas.getAssocClass().getSyn());
+            joinFilter.setExpr(new QFilterExpr(BoolOper.BOOL_AND,
+                            joinFilter.getExpr(),
+                            new QFilterExpr(CompOper.COMP_EQLEFTOUTERJOIN,
+                                    xas.getAssocClass().getSyn() + "." + leftCol,
+                                    childSyn + ".OBJECTID")
+                    )
+            );
+            sbSql.append(", ");
+            sbSql.append(right.getTableName());
+            sbSql.append(C_SPC);
+            sbSql.append(rightSyn);
+            joinFilter.setExpr(new QFilterExpr(BoolOper.BOOL_AND,
+                            joinFilter.getExpr(),
+                            new QFilterExpr(CompOper.COMP_EQ,
+                                    xas.getAssocClass().getSyn() + "." + rightCol,
+                                    parentSyn + ".OBJECTID")
+                    )
+            );
+        } else {
+            if (left == xas.getFromClass()) {
+                // left table is the child
+                childSyn = getTableSyn(start, leftchain);
+                parentSyn = getTableSyn(start, rightchain);
+            } else {
+                // right table is the child ???
+                // Is this valid?  --> yes.
+                childSyn = getTableSyn(start, rightchain);
+                parentSyn = getTableSyn(start, leftchain);
+            }
+            sbSql.append(", ");
+            sbSql.append(right.getTableName());
+            sbSql.append(C_SPC);
+            sbSql.append(rightSyn);
+            joinFilter.setExpr(new QFilterExpr(BoolOper.BOOL_AND,
+                            joinFilter.getExpr(),
+                            new QFilterExpr(CompOper.COMP_EQLEFTOUTERJOIN,
+                                    new SqlAttrRef(childSyn + "." + xas.getFromColName()),
+                                    new SqlAttrRef(parentSyn + "." + "OBJECTID "))
+                    )
+            );
+        }
+
+    }
+
+    private void addExtAttrJoin(StringBuffer sbSql, QueryFilter joinFilter, Class start, QueryAttrRef attrref, List extAttrs)
+            throws AppException {
+        String parsyn = getTableSyn(start, attrref.getAssocs());
+        String xsyn = getXTableSyn(start, attrref, extAttrs);
+        //
+        sbSql.append(" LEFT OUTER JOIN ");
+        sbSql.append(_getXMR().mapPrimToTable(attrref.getAttr().getPrimType()));
+        sbSql.append(C_SPC);
+        sbSql.append(xsyn);
+        sbSql.append(C_SPC);
+        joinFilter.setExpr(new QFilterExpr(BoolOper.BOOL_AND,
+                        joinFilter.getExpr(),
+                        new QFilterExpr(BoolOper.BOOL_AND,
+                                new QFilterExpr(CompOper.COMP_EQLEFTOUTERJOIN,
+                                        new SqlAttrRef(xsyn + ".PAROBJECTID"),
+                                        new SqlAttrRef(parsyn + ".OBJECTID")),
+                                new QFilterExpr(CompOper.COMP_EQLEFTOUTERJOIN,
+                                        new SqlAttrRef(xsyn + ".ATTRIBUTEID"),
+                                        new Long(attrref.getAttr().getIID().getLongValue()))
+                        )
+                )
+        );
+    }
+
+    /**
+     * Gets a column ref for an extended attribute.
+     */
+    private String getXColRef(Class start, QueryAttrRef attrref, List extAttrs)
+            throws AppException {
+        // add normal table ref
+        String retVal = getXTableSyn(start, attrref, extAttrs);
+        // add index of ext attr based on provided list
+        retVal += ".";
+        if (attrref.getAttr().getPrimType() == Primitive.MULTIENUM) {
+            retVal += "ENUMLITERALID";
+        } else {
+            retVal += "VALUE";
+        }
+        return retVal;
+    }
+
+    private String getColRef(Class start, QueryAttrRef attrref)
+            throws AppException {
+        // add normal table ref
+        String retVal = getColRef(start, attrref.getAssocs(), attrref.getAttr());
+        return retVal;
+    }
+
+    /**
+     * Builds an unambiguous SQL column reference for an attr/column reference.
+     */
+    private String getColRef(Class start, AssocChain asses, ClassAttr attr)
+            throws AppException {
+        String retVal = getTableSyn(start, asses);
+        retVal += "." + attr.getColName();
+        return retVal;
+    }
+
+    /**
+     * Builds an unambiguous synonym for a class / table reference.
+     */
+    private String getTableSyn(Class start, AssocChain asses)
+            throws AppException {
+        String retVal = start.getSyn();
+        Class current = start;
+        Iterator iAsses = null;
+        if (asses != null && (iAsses = asses.iterator()) != null) {
+            while (iAsses.hasNext()) {
+                Association ass = (Association) iAsses.next();
+                Class next = getOtherClass(ass, current);
+                retVal += "_" + ass.getSyn();
+                retVal += "_" + next.getSyn();
+                current = next;
+            }
+        }
+        return retVal;
+    }
+
+    private String getXTableSyn(Class start, QueryAttrRef attrref, List extAttrs)
+            throws AppException {
+        AssocChain asses = attrref.getAssocs();
+        String retVal = getTableSyn(start, asses);
+        retVal += "_" + extAttrs.indexOf(attrref);
+        return retVal;
+    }
+
+    private boolean isNewAndNeeded(Association xas, List assocs, List visits) {
+        boolean retVal = false;
+        if (assocs.contains(xas) && !visits.contains(xas)) {
+            retVal = true;
+        }
+        return retVal;
+    }
+
+
+    private void doFilter(StringBuffer sbSql, Queryuery query, QueryFilterExpr fex, List extAttrs)
+            throws Exception, AppException {
+        if (fex != null) {
+            sbSql.append(" WHERE ");
+            buildWhere(sbSql, null, query.getTargetClass(), extAttrs, fex);
+        }
+    }
+
+    private void buildWhere(StringBuffer sbSql, QueryFilterExpr parExpr, Class start, List extAttrs, Object arg)
+            throws Exception, AppException {
+        if (arg == null) return;
+
+        if (arg instanceof QueryFilterExpr) {
+            QueryFilterExpr fex = (QueryFilterExpr) arg;
+            IOperator oper = fex.getOper();
+            sbSql.append("(");
+            buildWhere(sbSql, fex, start, extAttrs, fex.getLeft());
+            sbSql.append(C_SPC);
+            buildOperClause(sbSql, fex);
+            sbSql.append(C_SPC);
+            buildWhere(sbSql, fex, start, extAttrs, fex.getRight());
+            sbSql.append(")");
+        } else if (arg instanceof QueryAttrRef) {
+            QueryAttrRef attrref = (QueryAttrRef) arg;
+            ClassAttr attr = attrref.getAttr();
+            if (attr.getIsExtended()) {
+                sbSql.append(_getXColRef(start, attrref, extAttrs));
+            } else {
+                sbSql.append(_getColRef(start, attrref));
+            }
+        } else if (arg instanceof ClassAttr) {
+            QueryAttrRef attrref = XMR.getInstance().getAttrRef(null, start, null, (ClassAttr) arg);
+            ClassAttr attr = attrref.getAttr();
+            if (attr.getIsExtended()) {
+                sbSql.append(_getXColRef(start, attrref, extAttrs));
+            } else {
+                sbSql.append(_getColRef(start, attrref));
+            }
+        } else {
+            // handle user entered literals
+            // ASSERTION: parent operator must be a CompOper
+            CompOper cop = (CompOper) parExpr.getOper();
+            if (arg instanceof String) {
+                if (cop == CompOper.COMP_LIKE || cop == CompOper.COMP_NOTLIKE) {
+                    sbSql.append("'%" + SQLUtil.primer(arg.toString()) + "%'");
+                } else {
+                    sbSql.append("'" + SQLUtil.primer(arg.toString()) + "'");
+                }
+            } else if (arg instanceof java.sql.Timestamp) {
+                sbSql.append("'" + arg.toString() + "'");
+            } else if (arg instanceof Object[]) {
+                sbSql.append('(');
+                sbSql.append(Strings.buildCommaDelList(Arrays.asList((Object[]) arg)));
+                sbSql.append(')');
+            } else if (arg instanceof long[]) {
+                sbSql.append('(');
+                sbSql.append(Strings.buildCommaDelList((long[]) arg));
+                sbSql.append(')');
+            } else if (arg instanceof Long) {
+                sbSql.append(arg.toString());
+            } else if (arg instanceof SqlAttrRef) {
+                sbSql.append(arg.toString());
+            } else {
+                sbSql.append(SQLUtil.primer(arg + ""));
+            }
+        } // end literals
+    }
+
+    /**
+     * Implement rules for mapping IOperator's to SQL operators.
+     */
+    private void buildOperClause(StringBuffer sbSql, QueryFilterExpr fex)
+            throws Exception {
+        if (fex.getLeft() == null || fex.getRight() == null)
+            return;
+
+        IOperator oper = fex.getOper();
+        if (oper instanceof CompOper) {
+            CompOper cop = (CompOper) oper;
+            // use default mapping
+            sbSql.append(mapOperToSQL(oper));
+            if (oper == CompOper.COMP_CONTAINS ||
+                    oper == CompOper.COMP_NOTCONTAINS ||
+                    oper == CompOper.COMP_CONTAINSALL) {
+                throw new Exception("Query translator does not yet handle operator '" + oper.getDisplayString() + "'.");
+            }
+        } else {
+            // use default mapping
+            sbSql.append(mapOperToSQL(oper));
+        }
+    }
+
+    private boolean hasPrimArg(QueryFilterExpr fex, PrimitiveDataType prim) {
+        boolean retVal = false;
+        retVal = (_isPrimType(fex.getLeft(), prim) || isPrimType(fex.getRight(), prim));
+        return retVal;
+    }
+
+    private boolean isPrimType(Object arg, PrimitiveDataType prim) {
+        boolean retVal = false;
+        if (arg instanceof QueryAttrRef) {
+            QueryAttrRef attrref = (QueryAttrRef) arg;
+            retVal = (attrref.getAttr().getPrimType() == prim);
+        }
+        return retVal;
+    }
+
+    private PrimitiveDataType getExprPrimType(QueryFilterExpr fex) {
+        PrimitiveDataType retVal = null;
+        if ((retVal = getPrimType(fex.getLeft())) == null) {
+            retVal = getPrimType(fex.getRight());
+        }
+        return retVal;
+    }
+
+    private PrimitiveDataType getPrimType(Object arg) {
+        PrimitiveDataType retVal = null;
+        if (arg instanceof QueryAttrRef) {
+            QueryAttrRef attrref = (QueryAttrRef) arg;
+            retVal = attrref.getAttr().getPrimType();
+        }
+        return retVal;
+    }
+
+    private void doOrderBy(StringBuffer sbSql, Queryuery query, List extAttrs)
+            throws Exception {
+        Vector sqlitems = new Vector();
+        QuerySort sort = query.getSort();
+        if (sort != null) {
+            List sorts = sort.getSortItems();
+            if (sorts != null && sorts.size() > 0) {
+                sbSql.append(" ORDER BY ");
+                Iterator isort = sorts.iterator();
+                while (isort.hasNext()) {
+                    QuerySortItem si = (QuerySortItem) isort.next();
+                    if (si.getAttrRef().getAttr().getIsExtended()) {
+                        sqlitems.add(_getXColRef(query.getTargetClass(), si.getAttrRef(), extAttrs));
+                    } else {
+                        sqlitems.add(_getColRef(query.getTargetClass(), si.getAttrRef()));
+                    }
+                }
+                sbSql.append(Strings.buildCommaDelList(sqlitems));
+            }
+        }
+    }
+
+    private static class SqlAttrRef {
+        public String ref = null;
+
+        public SqlAttrRef(String aref) {
+            ref = aref;
+        }
+
+        public String toString() {
+            return ref;
+        }
+    }
+}

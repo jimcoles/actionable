@@ -1,0 +1,128 @@
+package com.oculussoftware.util;
+
+import java.io.*;
+import java.util.*;
+import java.net.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Properties;
+import com.wintertree.thesdb.*;
+import com.oculussoftware.api.sysi.*;
+
+/* demo servlet for the thesaurus
+   the thesaurus uses a properties file that describes where the 
+   thesaurus lib. files are stored. It then loads them up and you 
+   are ready to look up synonyms....
+*/
+
+/**
+ * issue Number     Programmar     Date         Action
+ * ---              Cuihua Zhang   8.24.2000    added addSynonymToCategory and deleteSynonymFromCategory methods
+*/
+
+
+public final class Thesaurus
+{
+  public static final String THESAURUS_FILE = "..\\JavaWebServer2.0\\properties\\pm_thesdb.properties";
+  private ThesaurusSession _thesDB = null;
+  private static Thesaurus _instance = null;
+  private TextThesaurus userThes = null;
+  
+  private Thesaurus()
+    throws OculusException
+  {
+    try
+    {
+      _thesDB = new ThesaurusSession();
+      // Load the properties.
+      Properties properties = new Properties();
+      properties.load(new FileInputStream(THESAURUS_FILE));
+      CompressedThesaurus mainThes = new CompressedThesaurus(properties.getProperty("MainThesaurusFile"));
+      userThes = new TextThesaurus(properties.getProperty("UserThesaurusFile"));
+      com.wintertree.thesdb.Thesaurus thesauri[] = new com.wintertree.thesdb.Thesaurus[2];
+      thesauri[0] = mainThes;
+      thesauri[1] = userThes;
+      _thesDB.setThesauri(thesauri);
+    }
+    catch (Exception exp)
+    {
+      throw new OculusException(exp);
+    }
+  }
+
+  public static Thesaurus getInstance()
+    throws OculusException
+  {
+    if (_instance == null)
+      _instance = new Thesaurus();
+    return _instance;
+  }
+
+
+  public Enumeration getCategoriesForWord(String word)
+  {
+		return _thesDB.categoryNames(word);
+  }		
+
+  public Enumeration getSynonymsForCategory(String cat)
+  {
+    return _thesDB.synonyms(cat);
+  }
+
+  public Enumeration getSynonymsForWord(String word)
+  {
+    Vector synonyms = new Vector();
+    Enumeration e = getCategoriesForWord(word);
+		if (e.hasMoreElements())
+    {
+			while (e.hasMoreElements())
+      {
+				String catName = (String)e.nextElement();
+				for (Enumeration t = getSynonymsForCategory(catName); t.hasMoreElements();) 
+          synonyms.add(t.nextElement());
+			}
+		}
+    return synonyms.elements();
+  }
+  
+  public void addSynonymToCategory(String catname, String synonym)
+  {
+    try {
+      userThes.addSynonym (catname, synonym);
+    }
+    catch (ThesaurusUpdateException e)
+    {
+      e.printStackTrace();
+    }
+    
+  }
+  
+  public void deleteSynonymFromCategory(String catname, String synonym)
+  {
+    try
+    {
+      userThes.deleteSynonym(catname, synonym); 
+    }
+    catch (CategoryException c)
+    {
+      c.printStackTrace();
+    }
+
+    catch (SynonymException s)
+    {
+      s.printStackTrace();
+    }
+
+    catch (ThesaurusUpdateException t)
+    {
+      t.printStackTrace();
+    }
+  }
+}
+
+
+
+			
+
+			
