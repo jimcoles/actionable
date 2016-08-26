@@ -10,15 +10,20 @@
 
 package org.jkcsoft.bogey.metamodel;
 
+import java.util.HashMap;
 
-import org.jkcsoft.bogey.system.AppException;
+/**
+ * @author Jim Coles
+ */
+public class RepoMap extends HashMap<String, Object> {
 
-import java.util.LinkedList;
+    private Oid oid;
 
-public class ActionSequence extends LinkedList<Action> {
-
-    public ActionSequence() throws AppException {
-        super();
+    public Oid getOid() {
+        return oid;
     }
 
+    public void setOid(Oid oid) {
+        this.oid = oid;
+    }
 }

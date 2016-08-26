@@ -21,6 +21,8 @@ import java.util.*;
  * the meta objects, e.g., Entity Classes, States, Attributes.
  *
  * TODO: Rename this class
+ *
+ * TODO: This class is effectively a list of 'directory' (i.e., LDAP-like) names. Try to do a better job.
  */
 public class IDCONST {
 
@@ -29,6 +31,21 @@ public class IDCONST {
     public static final Oid USER = null;
     public static final Oid GROUP = null;
     public static final Oid USER_SYSTEM = null;
+    public static final Oid NAME = null;
+    public static final Oid DESC = null;
+    public static final Oid CREATION_DATE = null;
+    public static final Oid MESSAGE_ATTACHED = null;
+    public static final Oid FILE_ATTACHED = null;
+    public static final Oid LINK_ATTACHED = null;
+    public static final Oid CLASS = null;
+    public static final Oid HYPERLINK = null;
+    public static final Oid DISCUSSIONTOPIC = null;
+    public static final Oid NOTIFICATION = null;
+    public static final Oid URL = null;
+    public static final Oid FILE = null;
+    public static final Oid PROCESSROLE = null;
+    public static final Oid USER_ADMIN = null;
+
 
     //------------------------------------------------------------
     // Private static vars

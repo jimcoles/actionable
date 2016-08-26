@@ -13,6 +13,7 @@ package org.jkcsoft.bogey.system;
 import org.jkcsoft.bogey.metamodel.Oid;
 import org.jkcsoft.bogey.model.BusinessObject;
 import org.jkcsoft.bogey.model.IDCONST;
+import org.jkcsoft.bogey.model.ManagedObject;
 
 /**
  * Helper for getting objects from CRM with less syntax
@@ -41,24 +42,24 @@ public class MC {
     /**
      * 'Native' object getter
      */
-    public BusinessObject getObj(Oid type, Oid iid) throws AppException {
+    public ManagedObject getObj(Oid type, Oid iid) throws AppException {
         if (type == null) throw new AppException("null type parameter.");
 
         return _context.getCRM().getCompObject(_context, "", iid);
     }
 
 
-    public BusinessObject getObj(Oid type, long loid) throws AppException {
+    public ManagedObject getObj(Oid type, long loid) throws AppException {
         return getObj(type, _context.getRepository().makeReposID(loid));
     }
 
-    public BusinessObject getObj(String strDirName, Oid iid) throws AppException {
+    public ManagedObject getObj(String strDirName, Oid iid) throws AppException {
         if (strDirName == null) throw new AppException("null type parameter.");
 
         return _context.getCRM().getCompObject(_context, strDirName, iid);
     }
 
-    public BusinessObject getObj(String strDirName, long loid) throws AppException {
+    public ManagedObject getObj(String strDirName, long loid) throws AppException {
         return getObj(strDirName, _context.getRepository().makeReposID(loid));
     }
 }

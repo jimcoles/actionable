@@ -31,7 +31,11 @@ public abstract class Classifier extends Namespace {
     public Classifier() {
     }
 
-    //----------------------------------------------------------------------------
+    public Classifier(Namespace namespace, DataModel dataModel, Guid guid, Oid oid, String displayName, String
+            codeName, String description, ConfigKind configkind) {
+        super(namespace, dataModel, guid, oid, displayName, codeName, description, configkind);
+    }
+//----------------------------------------------------------------------------
     // Instance methods
     //----------------------------------------------------------------------------
 

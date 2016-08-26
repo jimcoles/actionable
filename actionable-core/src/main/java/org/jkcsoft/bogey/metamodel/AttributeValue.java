@@ -20,9 +20,6 @@ package org.jkcsoft.bogey.metamodel;
  * - CharacterStream
  * - BinaryStream
  * - java.lang.Date
- * -
- *
- * @see com.jkc.data.model.DataModel
  */
 public class AttributeValue extends java.lang.Object {
 

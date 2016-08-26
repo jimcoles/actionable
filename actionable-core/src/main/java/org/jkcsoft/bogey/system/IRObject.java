@@ -22,20 +22,6 @@ import java.util.Map;
  * of an IRClass.  It is the entry point for
  * obtaining and setting state information for an object of a
  * registered IRClass. It is inherently persistable.
- * <p>
- * Using the RDBMS analogy:
- * <pre>
- * repi           RDBMS
- * --------------------
- * DynaClass      Table defn
- * IRAttribute    Column defn (non-FK or PK, definition)
- * IRAssoc        Foreign Key defn
- * IRType         A set of common Column definitions
- *
- * IRObject       Row
- * IRProperty     Data Column (value)
- * IRLink         Foreign Key Column (value)
- * </pre>
  */
 interface IRObject {
 

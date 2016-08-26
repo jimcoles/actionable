@@ -83,7 +83,7 @@ public class Expression {
 //                ObjectContext context = _o.getObjectContext();
                 Attribute att = null; //(Attribute) context.getCRM().getCompObject(context, "Attribute", attiid);
                 Map<Oid, BMProperty> props = _o.getAttributes();
-                PrimitiveEnum prim = att.getPrimitiveDataType().getType();
+                PrimitiveEnum prim = att.getPrimitiveDataType();
                 if (prim == PrimitiveEnum.INTEGER || prim == PrimitiveEnum.DECIMAL) {
                     str = props.get(att.getCodeName()).toString();
                     addElement(str);

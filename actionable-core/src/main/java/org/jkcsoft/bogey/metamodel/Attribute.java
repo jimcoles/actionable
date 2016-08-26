@@ -34,7 +34,7 @@ public class Attribute extends ModelElement {
 
     private Classifier          type;
     private Class               owner;
-    private PrimitiveDataType   primitiveDataType = null;
+    private PrimitiveEnum       primitiveDataType = null;
     private AttributeKind       attributeKind = null;
     private boolean             bIsExt = false;
     private boolean             bIsRole = false;
@@ -46,7 +46,7 @@ public class Attribute extends ModelElement {
     public Attribute() {
     }
 
-    public Attribute(Class owner, Oid attrid, String colname, String displayname, PrimitiveDataType type,
+    public Attribute(Class owner, Oid attrid, String colname, String displayname, PrimitiveEnum type,
                      AttributeKind kind)
     {
         super(null, null, null, attrid, displayname, colname, null, null);
@@ -75,7 +75,7 @@ public class Attribute extends ModelElement {
         this.type = type;
     }
 
-    public PrimitiveDataType getPrimitiveDataType() {
+    public PrimitiveEnum getPrimitiveDataType() {
         return primitiveDataType;
     }
 

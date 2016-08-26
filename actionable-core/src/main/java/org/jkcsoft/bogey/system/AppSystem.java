@@ -35,4 +35,9 @@ public class AppSystem {
     public static SOM getCrm() {
         return crm;
     }
+
+    public static Repository getRepo() {
+        return null; // TODO
+    }
+
 }

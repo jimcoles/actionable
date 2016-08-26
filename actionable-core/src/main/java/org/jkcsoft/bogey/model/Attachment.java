@@ -11,8 +11,10 @@
 package org.jkcsoft.bogey.model;
 
 
-import org.jkcsoft.bogey.system.AppException;
+import org.jkcsoft.bogey.metamodel.Class;
 import org.jkcsoft.bogey.metamodel.Oid;
+import org.jkcsoft.bogey.metamodel.PersState;
+import org.jkcsoft.bogey.system.AppException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,8 +23,7 @@ import java.io.OutputStream;
 
 public class Attachment extends BusinessObject {
 
-    private Oid _categoryIID,
-            _parentObjIID;
+    private Oid _categoryIID, _parentObjIID;
     private byte[] _content;
     private BMProperty _filesize, _filename, _viewable;
 
@@ -37,53 +38,26 @@ public class Attachment extends BusinessObject {
         _filename = new BMProperty(this);
         _viewable = new BMProperty(this);
 
-        _filesize.setDefnObject(IDCONST.FILESIZE.getIIDValue());
-        _filename.setDefnObject(IDCONST.FILENAME.getIIDValue());
-        _viewable.setDefnObject(IDCONST.FILEVIEWABLE.getIIDValue());
+//        _filesize.setDefnObject(IDCONST.FILESIZE.getIIDValue());
+//        _filename.setDefnObject(IDCONST.FILENAME.getIIDValue());
+//        _viewable.setDefnObject(IDCONST.FILEVIEWABLE.getIIDValue());
         _categoryIID = new Oid(1);
     }
 
-    //-------------------------- Protected Methods -----------------------------
-    public Attachment setAttachmentType(AttachmentType type)
-            throws AppException {
-        if (getPersState().equals(PersState.UNMODIFIED))
-            setPersState(PersState.MODIFIED);
-        _type = type;
-        return this;
-    }
 
-    public Attachment setViewable(boolean viewable)
-            throws AppException {
+    public Attachment setViewable(boolean viewable) throws AppException {
         _viewable.setValue(new Boolean(viewable));
         return this;
     }
 
-
-    //------------------------ ACCESSORS -------------------------------
-
-    public boolean getViewable()
-            throws AppException {
+    public boolean getViewable() throws AppException {
         if (_viewable != null && _viewable.getValue() != null)
             return ((Boolean) _viewable.getValue()).booleanValue();
         else
             return false;
     }
 
-
-    public AttachmentType getAttachmentType() {
-        return _type;
-    }
-
-    private int getPSPLength()
-            throws AppException {
-        return getFileSize();
-    }
-
-//----------------- IProduct Methods ------------------------------------
-
-
-    public void download()
-            throws AppException {
+    public void download() throws AppException {
         try {
             byte[] data = getContent();
             String dest = ".\\public_html\\files\\" + getFilename();
@@ -153,36 +127,31 @@ public class Attachment extends BusinessObject {
         return this;
     }
 
-    //------------------------ ACCESSORS -------------------------------
-
-    public Oid getCategoryCode()
-            throws AppException {
+    public Oid getCategoryCode() throws AppException {
         return _categoryIID;
     }
 
-    public int getFileSize()
-            throws AppException {
+    public int getFileSize() throws AppException {
         if (_filesize.getValue() != null)
             return ((Integer) _filesize.getValue()).intValue();
         else
             return -1;
     }
 
-    public byte[] getContent()
-            throws AppException {
+    public byte[] getContent() throws AppException {
         return _content;
     }
 
-    public String getFilename()
-            throws AppException {
+    public String getFilename() throws AppException {
         return (String) _filename.getValue();
     }
 
 
-    public Attachment createCopy()
-            throws AppException {
-        Attachment newAttachment = (Attachment) getObjectContext().getCRM().getCompObject(getObjectContext(), "File", (IDataSet) null, true);
-        newAttachment.setDefnObject((IRClass) getObjectContext().getCRM().getCompObject(getObjectContext(), "Class", IDCONST.FILE.getIIDValue()));
+    public Attachment createCopy() throws AppException {
+        Attachment newAttachment = (Attachment)
+                getObjectContext().getCRM().getCompObject(getObjectContext(), "File", null, true);
+        newAttachment.setDefnObject((Class)
+                getObjectContext().getCRM().getCompObject(getObjectContext(), "Class", IDCONST.FILE));
 
         newAttachment.setFilename(getFilename());
         newAttachment.setDescription(getDescription());
@@ -191,19 +160,17 @@ public class Attachment extends BusinessObject {
         newAttachment.setLinkAttached(hasLinkAttached());
         newAttachment.setFileAttached(hasFileAttached());
         newAttachment.setCategoryCode(getCategoryCode());
-        newAttachment.setAttachmentType(getAttachmentType());
         newAttachment.setFileSize(getFileSize());
 
         return newAttachment;
     }
 
-    //----------------- IRPropertyMap Methods---------------------------------
     public Object get(Object key)
             throws AppException {
         if (key instanceof String) {
-            if (key.equals(LABEL_FILESIZEBYTES))
+            if (key.equals(""))
                 return _filesize;
-            if (key.equals(LABEL_FILENAME))
+            if (key.equals(""))
                 return _filesize;
             else
                 return super.get(key);
@@ -215,9 +182,9 @@ public class Attachment extends BusinessObject {
             throws AppException {
         if (key instanceof String && value instanceof BMProperty) {
             BMProperty property = (BMProperty) value;
-            if (key.equals(LABEL_FILESIZEBYTES))
+            if (key.equals(""))
                 setFileSize(((Integer) property.getValue()).intValue());
-            if (key.equals(LABEL_FILENAME))
+            if (key.equals(""))
                 setFilename((String) property.getValue());
             else
                 super.put(key, value);
@@ -237,10 +204,10 @@ public class Attachment extends BusinessObject {
         Attachment attach = null;
         attach = new Attachment();
         attach.setOid(getOid());
-        attach.setObjectContext(getObjectContext());
+//        attach.setObjectContext(getObjectContext());
         attach.setPersState(getPersState());
-        attach._classIID = _classIID;
-        attach._stateIID = _stateIID;
+//        attach._classIID = _classIID;
+//        attach._stateIID = _stateIID;
         attach.setDeleteState(getDeleteState());
         //Saleem added to this line
         if (!getPersState().equals(PersState.PARTIAL) && getProperties() != null)
@@ -249,8 +216,8 @@ public class Attachment extends BusinessObject {
         attach.setFilename(getFilename());
         attach.setDescription(getDescription());
         attach._content = _content;
-        attach._creatorIID = _creatorIID;
-        attach._accessIID = _accessIID;
+        attach.setCreatorIID(this.getCreatorIID());
+        attach.setAccessIID(this.getAccessIID());
         attach.setCreationDate(getCreationDate());
         attach.setMessageAttached(hasMessageAttached());
         attach.setLinkAttached(hasLinkAttached());
@@ -258,7 +225,6 @@ public class Attachment extends BusinessObject {
 
         attach._parentObjIID = _parentObjIID;
         attach.setCategoryCode(getCategoryCode());
-        attach.setAttachmentType(getAttachmentType());
         attach.setFileSize(getFileSize());
         attach.setViewable(getViewable());
         return attach;

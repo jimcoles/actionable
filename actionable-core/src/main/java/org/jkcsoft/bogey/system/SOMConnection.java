@@ -21,7 +21,7 @@ import org.jkcsoft.bogey.model.User;
  * @author Jim Coles
  */
 
-interface SOMConnection {
+public interface SOMConnection {
 
     Oid getOid();
 

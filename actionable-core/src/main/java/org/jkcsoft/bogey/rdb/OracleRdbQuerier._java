@@ -147,7 +147,10 @@ public class OracleRdbQuerier extends RdbQuerier {
         Class target = query.getTargetClass();
 
         // central table of the join
-        sbSql.append(target.get);
+
+        // TODO Do we want to keep this query stuff ...
+
+//        sbSql.append(target.get);
         sbSql.append(C_SPC);
         sbSql.append(_getTableSyn(target, null));
         sbSql.append(C_SPC);

@@ -10,6 +10,7 @@
 
 package org.jkcsoft.bogey.system;
 
+import org.jkcsoft.bogey.metamodel.DataModel;
 import org.jkcsoft.bogey.metamodel.Oid;
 
 import java.util.Observer;
@@ -19,41 +20,31 @@ public interface Repository {
     // Repository I/O methods
     //---------------------------------------------------------------
 
-    public void initialize() throws AppException;
+    void initialize() throws AppException;
 
-    public void setMaxOID()
-            throws AppException;
+    void setMaxOID() throws AppException;
 
-    public String getName()
-            throws AppException;
+    String getName() throws AppException;
 
-    public Oid genReposID()
-            throws AppException;
+    Oid genReposID() throws AppException;
 
-    public int getMajorVersion()
-            throws AppException;
+    int getMajorVersion() throws AppException;
 
-    public int getMinorVersion()
-            throws AppException;
+    int getMinorVersion() throws AppException;
 
-    public String getRelease()
-            throws AppException;
+    String getRelease() throws AppException;
 
-    public int getBuild()
-            throws AppException;
+    int getBuild() throws AppException;
 
-    public String getFullReleaseString()
-            throws AppException;
+    String getFullReleaseString() throws AppException;
 
     /**
      */
-    public Oid makeReposID(long id)
-            throws AppException;
+    Oid makeReposID(long id) throws AppException;
 
-    public IRObject getRootObject()
-            throws AppException;
+    IRObject getRootObject() throws AppException;
 
-//    public IRConnection getDataConnection(IObjectContext context)
+//    IRConnection getDataConnection(IObjectContext context)
 //            throws AppException;
 
     //---------------------------------------------------------------
@@ -63,11 +54,13 @@ public interface Repository {
     /**
      * Validates the current state of the data against the current meta repos
      */
-    public void validate(Observer o);
+    void validate(Observer o);
 
-//    public IRBusinessModel getBMRepository() throws AppException;
+//    IRBusinessModel getBMRepository() throws AppException;
 
-//    public DBVendor getVendor();
+//    DBVendor getVendor();
 
-    public String LOJO();
+    String LOJO();
+
+    DataModel getBMRepository();
 }

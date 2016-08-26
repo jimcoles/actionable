@@ -8,17 +8,15 @@
  * Also see the LICENSE file in the repository root directory.
  */
 
-package org.jkcsoft.bogey.metamodel;
+package org.jkcsoft.bogey.model;
 
-
-import org.jkcsoft.bogey.system.AppException;
-
-import java.util.LinkedList;
-
-public class ActionSequence extends LinkedList<Action> {
-
-    public ActionSequence() throws AppException {
-        super();
-    }
-
+/**
+ *
+ */
+public enum LinkKind {
+    WORKFLOW_DEP,
+    FUNCTIONAL_DEP,
+    BRANCH,
+    INPUT,
+    PROBLEMSTATEMENT
 }

@@ -10,8 +10,6 @@
 
 package org.jkcsoft.bogey.rdb;
 
-import com.jkc.data.*;
-
-public class RdbRecordSet extends com.jkc.data.RecordSet {
+public class RdbRecordSet {
 
 }

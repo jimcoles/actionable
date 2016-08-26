@@ -12,7 +12,9 @@ package org.jkcsoft.bogey.metamodel;
 
 import org.jkcsoft.bogey.model.BusinessObject;
 import org.jkcsoft.bogey.system.AppException;
+import org.jkcsoft.bogey.system.ObjectContext;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,7 +41,7 @@ public class StateMachine extends ModelElement {
 
     public State getStateObject(Oid id, boolean edit) throws AppException {
         if (id == null)
-            return null; // (State)context.getCRM().getCompObject(context,"State",(IDataSet)null, edit);
+            return null; // (State)context.getCRM().getCompObject(context,"State",(RepoMap)null, edit);
         else
             return (State) null; //context.getCRM().getCompObject(context,"State",id, edit);
     }
@@ -75,9 +77,13 @@ public class StateMachine extends ModelElement {
     }
 
     public State createState() throws AppException {
-        State state = null; // TODO (State) context.getCRM().getCompObject(context, "State", (IDataSet) null, true);
+        State state = (State) getSom().getCompObject((ObjectContext) null, "State", null, true);
         state.setStateMachineIID(getOid());
         return state;
+    }
+
+    public Collection<StateTransition> getEnabledTransitions(BusinessObject businessObject) {
+        return null;  // TODO
     }
 
 //    /**

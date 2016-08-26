@@ -30,7 +30,11 @@ public abstract class Namespace extends ModelElement {
     public Namespace() {
     }
 
-    //----------------------------------------------------------------------------
+    public Namespace(Namespace namespace, DataModel dataModel, Guid guid, Oid oid, String displayName, String
+            codeName, String description, ConfigKind configkind) {
+        super(namespace, dataModel, guid, oid, displayName, codeName, description, configkind);
+    }
+//----------------------------------------------------------------------------
     // Instance methods
     //----------------------------------------------------------------------------
 

@@ -9,30 +9,25 @@
  */
 package org.jkcsoft.bogey.metamodel;
 
+import org.jkcsoft.bogey.model.BMProperty;
+
 /**
  * @author J. Coles
  * @version 1.0
  */
 public class EnumeratedClass extends Class {
-    //----------------------------------------------------------------------------
-    // Private instance vars
-    //----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    // Constructor(s) (private, package, protected, public)
-    //----------------------------------------------------------------------------
-    public EnumeratedClass() {
+    private BMProperty values;
+
+    public EnumeratedClass(Oid classid, String table, String syn, String displayname) throws Exception {
+        super(classid, table, syn, displayname);
     }
 
-    //----------------------------------------------------------------------------
-    // Instance methods
-    //----------------------------------------------------------------------------
+    public BMProperty getValues() {
+        return values;
+    }
 
-    //---- <Accessors and Mutators> ----------------------------------------------
-
-    //---- </Accessors and Mutators> ----------------------------------------------
-
-    //----------------------------------------------------------------------------
-    // Private methods
-    //----------------------------------------------------------------------------
+    public void setValues(BMProperty values) {
+        this.values = values;
+    }
 }

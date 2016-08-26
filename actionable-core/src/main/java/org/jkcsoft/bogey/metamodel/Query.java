@@ -14,30 +14,19 @@ package org.jkcsoft.bogey.metamodel;
  *
  */
 public class Query {
-    //----------------------------------------------------------------------
-    // Private class vars
-    //----------------------------------------------------------------------
-    //----------------------------------------------------------------------
-    // Private instance vars
-    //----------------------------------------------------------------------
+
     private QuerySelect selNode = new QuerySelect();
     private Class targetClass = null;
     private QueryFilter filterNode = new QueryFilter();
     private QuerySort sortNode = new QuerySort();
 
-    //----------------------------------------------------------------------
-    // Public constructor
-    //----------------------------------------------------------------------
     public Query() {
-    }
 
-    //----------------------------------------------------------------------
-    // Instance methods
-    //----------------------------------------------------------------------
+    }
 
     public void setTargetClass(Class cls) {
         targetClass = cls;
-        QueryFilterExpr defFilter = getClassDefnFilter(_targetClass);
+        QueryFilterExpr defFilter = getClassDefnFilter(targetClass);
         if (defFilter != null) {
             QueryFilter filter = getFilter();
             QueryFilterExpr filterExpr = filter.getExpr();

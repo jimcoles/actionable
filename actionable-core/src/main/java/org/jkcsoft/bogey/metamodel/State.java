@@ -69,7 +69,7 @@ public class State extends ModelElement {
 
     public StateTransition getTransitionObject(Oid transIID, boolean edit) throws AppException {
         if (transIID == null)
-//            return (IRTransition) context.getCRM().getCompObject(context, "Transition", (IDataSet) null, edit);
+//            return (IRTransition) context.getCRM().getCompObject(context, "Transition", (RepoMap) null, edit);
             return null;
         else
 //            return (IRTransition) context.getCRM().getCompObject(context, "Transition", transIID, edit);
@@ -108,7 +108,7 @@ public class State extends ModelElement {
     }
 
     public StateTransition createTransition() throws AppException {
-        StateTransition trans = null; // (IRTransition) context.getCRM().getCompObject(context, "Transition", (IDataSet) null, true);
+        StateTransition trans = null; // (IRTransition) context.getCRM().getCompObject(context, "Transition", (RepoMap) null, true);
         trans.setFromStateIID(getOid());
         return trans;
     }

@@ -16,9 +16,9 @@ import org.jkcsoft.bogey.metamodel.Identifier;
  *
  */
 
-public class GenericObjectRecord implements IObjectRecord {
+public class GenericObjectRecord {
 
-    public IObjectRecord getParentObject() {
+    public GenericObjectRecord getParentObject() {
         return null;
     }
 
@@ -36,7 +36,8 @@ public class GenericObjectRecord implements IObjectRecord {
         return null;
     }
 
-    public void setParentObject(IObjectRecord parent) {
+    public void setParentObject(GenericObjectRecord parent) {
+
     }
 
 }

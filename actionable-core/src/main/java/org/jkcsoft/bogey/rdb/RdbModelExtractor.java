@@ -9,15 +9,13 @@
  */
 package org.jkcsoft.bogey.rdb;
 
-import com.jkc.data.dms.DataSystem;
-import com.jkc.data.dms.ModelExtractor;
-import com.jkc.data.metamodels.ssc.DataModel;
+import org.jkcsoft.bogey.metamodel.DataModel;
 
 /**
  * @author J. Coles
  * @version 1.0
  */
-public class RdbModelExtractor extends ModelExtractor {
+public class RdbModelExtractor {
     //----------------------------------------------------------------------------
     // Private instance vars
     //----------------------------------------------------------------------------
@@ -32,9 +30,10 @@ public class RdbModelExtractor extends ModelExtractor {
     //----------------------------------------------------------------------------
     // Instance methods
     //----------------------------------------------------------------------------
-    public DataModel buildDataModel(DataSystem ds) {
-        return null;
-    }
+
+//    public DataModel buildDataModel(DataSystem ds) {
+//        return null;
+//    }
 
     DataModel startExtraction() throws Exception {
         return null;

@@ -9,7 +9,8 @@
  */
 package org.jkcsoft.bogey.rdb;
 
-import com.jkc.roml.lang.runtime.Querier;
+import org.jkcsoft.bogey.metamodel.CompOper;
+import org.jkcsoft.bogey.metamodel.DataModel;
 
 import java.util.*;
 
@@ -74,15 +75,14 @@ import java.util.*;
  * For an inequality filter (i.e., ">", "<", ">=", etc) (not applicable)
  * For a sort by, dereference to the User.LASTNAME.
  */
-public class RdbQuerier extends Querier {
-    public static SqlQuerier getSQLWriter(DBVendor vendor, IXMR xmr)
-            throws Exception {
-        SqlQuerier retObj = null;
+public class RdbQuerier {
+    public static RdbQuerier getSQLWriter(DBVendor vendor) throws Exception {
+        RdbQuerier retObj = null;
 
         if (vendor == DBVendor.ORACLE) {
-            retObj = new OracleSqlQuerier();
+            retObj = new OracleRdbQuerier();
         } else if (vendor == DBVendor.SQL_SERVER) {
-            retObj = new SqlServerSqlQuerier();
+            retObj = new SqlServerRdbQuerier();
         }
         retObj.setXMR(xmr);
 
@@ -98,7 +98,7 @@ public class RdbQuerier extends Querier {
      * Method buildOperClause( ) might override these depending on
      * the argument types.
      */
-    public static String mapOperToSQL(IOperator oper) {
+    public static String mapOperToSQL(Operator oper) {
         String retVal = null;
         if (oper == CompOper.COMP_LIKE) retVal = "LIKE";
         else if (oper == CompOper.COMP_NOTLIKE) retVal = "NOT LIKE";
@@ -131,7 +131,7 @@ public class RdbQuerier extends Querier {
     // Private instance vars
     //-------------------------------------------------------------
 
-    private IXMR xmr = null;
+    private DataModel xmr = null;
     private List allAssocs = new Vector();
     private List allExtAttrs = new Vector();
     private List allEnumLitAttrs = new Vector();

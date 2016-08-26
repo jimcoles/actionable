@@ -19,6 +19,7 @@
         <module>actionables-pmc-ref</module>
         <module>actionable-modello</module>
         <module>actionable-core</module>
+        <module>actionables-uniblab</module>
     </modules>
 
     <dependencyManagement>

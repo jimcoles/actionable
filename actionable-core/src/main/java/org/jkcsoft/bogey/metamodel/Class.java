@@ -20,9 +20,7 @@ import java.util.Vector;
  * @version 1.0
  */
 public class Class extends Classifier {
-    //----------------------------------------------------------------------------
-    //----------------------------------------------------------------------------
-    private Oid classid = null;
+
     private boolean isLeaf = false;
     private boolean isRoot = false;
 
@@ -37,38 +35,28 @@ public class Class extends Classifier {
     //    private IQFilterExpr defFilter = null;
     private boolean isView = false;  // true implies this xmeta class corresponds to (is a view of) multiple bmr
     // classes.
-    private List allClassIDs = new Vector();
+    private List<Oid> allClassIDs = new Vector();
     private boolean bIsRoleBased = false;
     private boolean bIsRoleParent = false;
 
     //-------------------------------------------------------------------
     // Constructor(s)
     //-------------------------------------------------------------------
-    public Class(Oid classid, String table, String syn, String displayname) {
-        classid = classid;
-        syn = syn;
-        displayname = displayname;
+    public Class(Oid classid, String table, String codeName, String displayname) throws Exception {
+        super(null, null, null, classid, displayname, codeName, null, ConfigKind.DELETEABLE);
+        //
+        this.syn = codeName;  // TODO possibly munge
         allClassIDs.add(classid);
-        XMR.addClass(this);
+        DataModel.getInstance().addClass(this);
     }
 
-    //----------------------------------------------------------------------------
-    // Instance methods
-    //----------------------------------------------------------------------------
 
-    //-------------------------------------------------------------------
-    // Public methods
-    //-------------------------------------------------------------------
     public List getTableAttrs() {
         return attrs;
     }
 
     public List getKeywordSelectAttrs() {
         return keywordSelectAttrs;
-    }
-
-    public Oid getIID() {
-        return classid;
     }
 
     public String getSyn() {
@@ -148,7 +136,7 @@ public class Class extends Classifier {
 
     public Attribute addAttr(Oid attrid, String colname, String displayname, PrimitiveDataType type, AttributeKind
             kind, boolean isConfigurable) {
-        Attribute attribute = new Attribute(this, attrid, colname, displayname, type, kind);
+        Attribute attribute = new Attribute(this, attrid, colname, displayname, type.getType(), kind);
         addAttr(attribute, isConfigurable);
         return attribute;
     }
@@ -162,7 +150,7 @@ public class Class extends Classifier {
 
     public Attribute addKeywordSelectAttr(Oid attrid, String colname, String displayname, PrimitiveDataType type,
                                           AttributeKind kind) {
-        Attribute cam = new Attribute(this, attrid, colname, displayname, type, kind);
+        Attribute cam = new Attribute(this, attrid, colname, displayname, type.getType(), kind);
         keywordSelectAttrs.add(cam);
         return cam;
     }
@@ -188,7 +176,7 @@ public class Class extends Classifier {
         return this;
     }
 
-    public List getAllClassIDs() {
+    public List<Oid> getAllClassIDs() {
         return allClassIDs;
     }
 
@@ -210,6 +198,16 @@ public class Class extends Classifier {
         return bIsRoleParent;
     }
 
-    ;
 
+    public StateMachine getStateMachine() {
+        return null;  // TODO
+    }
+
+    public boolean hasStateMachine() {
+        return false;  // TODO
+    }
+
+    public Class getBaseClass() {
+        return null;
+    }
 }

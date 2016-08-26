@@ -14,30 +14,8 @@ package org.jkcsoft.bogey.metamodel;
  * @version 1.0
  */
 public class Generalization extends Association {
-    //----------------------------------------------------------------------------
-    // Private instance vars
-    //----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    // Constructor(s) (private, package, protected, public)
-    //----------------------------------------------------------------------------
-
-    /**
-     * Creates new Connector
-     */
-    public Generalization() {
+    public Generalization(Oid id, Class fromClass, Class toClass, String fromColName, String displayName) throws Exception {
+        super(id, fromClass, toClass, fromColName, displayName);
     }
-
-    //----------------------------------------------------------------------------
-    // Instance methods
-    //----------------------------------------------------------------------------
-
-    //---- <Accessors and Mutators> ----------------------------------------------
-
-    //---- </Accessors and Mutators> ----------------------------------------------
-
-    //----------------------------------------------------------------------------
-    // Private methods
-    //----------------------------------------------------------------------------
-
 }

@@ -9,7 +9,9 @@
  */
 package org.jkcsoft.bogey.metamodel;
 
+import org.jkcsoft.bogey.model.BMProperty;
 import org.jkcsoft.bogey.model.Element;
+import org.jkcsoft.bogey.system.AppException;
 import org.jkcsoft.bogey.system.SOM;
 import org.jkcsoft.java.beans.BeanDispatcher;
 
@@ -97,7 +99,7 @@ public abstract class ModelElement implements Element {
         this.guid = guid;
     }
 
-    public void setOid(Oid oid) throws Exception {
+    public void setOid(Oid oid) throws AppException {
         this.oid = oid;
     }
 
@@ -183,4 +185,5 @@ public abstract class ModelElement implements Element {
         return null; // TODO
     }
 
+//    public abstract BMProperty getEnumliteral(Oid enumLitIID, boolean b);
 }

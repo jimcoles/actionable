@@ -471,7 +471,7 @@ public class AccessMgr {
 //                    + COL_PERMID + " = " + permid + " AND "
 //                    + COL_ACCESSORID + " = " + accid + " ";
 //
-//            IDataSet data = stmt.retrieve(query);
+//            RepoMap data = stmt.retrieve(query);
 //            if (!data.next()) {
 //                // if not there, insert it...
 //                query = "INSERT INTO PERMISSIONGRANT ("
@@ -569,7 +569,7 @@ public class AccessMgr {
 
 //        IQueryProcessor qp = null;
 //        IRConnection jdtC = null;
-//        IDataSet rs = null;
+//        RepoMap rs = null;
 //        com.oculussoftware.system.sec.AttrGroupGrantAsc attsec = (com.oculussoftware.system.sec.AttrGroupGrantAsc)
 //                list.get(0);
 //        try {

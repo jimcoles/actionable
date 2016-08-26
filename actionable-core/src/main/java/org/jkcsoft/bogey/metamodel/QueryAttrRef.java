@@ -66,7 +66,7 @@ public class QueryAttrRef {
           
         }
       }
-      retVal = ( ((IXAssoc) obj).getOid().getLongValue() == getOid().getLongValue() );
+      retVal = ( ((Association) obj).getOid().getLongValue() == getOid().getLongValue() );
     }
     return retVal;
   }

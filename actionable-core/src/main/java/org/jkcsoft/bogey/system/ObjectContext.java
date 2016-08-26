@@ -90,8 +90,7 @@ public class ObjectContext implements java.io.Serializable {
      * @throws AppException This exception is thrown if there is an error in connecting to
      *                      the repository.
      */
-    public Repository getRepository()
-            throws AppException {
+    public Repository getRepository() throws AppException {
         // FIXME: I think the Repository object should be a member variable of the ObjectContext
         // instead of just the Oid of the Repository.  That way we won't have to go to the
         // SOMImpl everytime we want a handle to the repository.
@@ -104,8 +103,7 @@ public class ObjectContext implements java.io.Serializable {
      * @return A reference to this object.
      * @throws AppException This exception is thrown if the SOMConnection parameter is null.
      */
-    public ObjectContext setConnection(SOMConnection conn)
-            throws AppException {
+    public ObjectContext setConnection(SOMConnection conn) throws AppException {
 //    if (conn == null) throw new AppException("Cannot set the SOMImpl connection of this object to null.");
 //        conn.setObjectContext(this);
         _connection = conn;

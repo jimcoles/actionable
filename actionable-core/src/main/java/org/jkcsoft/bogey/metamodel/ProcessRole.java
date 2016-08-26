@@ -35,11 +35,6 @@ public class ProcessRole extends ModelElement {
         return _deletestate;
     }
 
-    public boolean isActive()
-            throws AppException {
-        return _isactive;
-    }
-
     public ConfigKind getConfigKind()
             throws AppException {
         return _configkind;

@@ -132,9 +132,9 @@ public class ObjectACInfo {
     public void fillAccessorInhrPermissions(long accId, Oid accTypeID, GrantSet permSet, Permission perms[])
             throws AppException {
         // delegate to common method
-        if (accTypeID.getLongValue() == IDCONST.USER.getIIDValue()) {
+        if (accTypeID.getLongValue() == IDCONST.USER.getLongValue()) {
             fillInhrPermissions(new Long(accId), _buildGroupList(accId), permSet, perms);
-        } else if (accTypeID.getLongValue() == IDCONST.GROUP.getIIDValue()) {
+        } else if (accTypeID.getLongValue() == IDCONST.GROUP.getLongValue()) {
             fillInhrPermissions(null, Long.toString(accId), permSet, perms);
         } else {
             throw new AppException("Attempt to get recursive permission grants for invalid accessor type.  Method " +
